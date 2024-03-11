@@ -40,7 +40,9 @@ ACRX_DXF_DEFINE_MEMBERS(
 )
 
 //-----------------------------------------------------------------------------
-Employee::Employee() : AcDbEllipse() {
+
+//Employee::Employee() : AcDbEllipse() {       // HACK: Exception when try to write text!!! 
+Employee::Employee() : AcDbEllipse(AcGePoint3d(), AcGeVector3d(0, 0, 1), AcGeVector3d(1, 0, 0), 0.3) {
 	m_nID = 0;
 	m_nCube = 0;
 	m_strFirstName = nullptr;
@@ -206,21 +208,60 @@ Adesk::Boolean Employee::subWorldDraw(AcGiWorldDraw * mode) {
 	AcDbEllipse::subWorldDraw(mode);
 
 	// Draw the Employee ID and Name
-	TCHAR buffer[255];
-	_stprintf(buffer, _T("ID: %d, CUBE: %d"), m_nID, m_nCube);
-	mode->geometry().text(center(), normal(), majorAxis(), minorAxis().length() / 2, 1.0, 0.0, 
-		buffer);
-	_stprintf(buffer, _T("FIRST NAME: %s, LAST NAME: %s"), m_strFirstName, m_strLastName);
-	mode->geometry().text(center() - minorAxis() / 2, normal(), majorAxis(), 
-		minorAxis().length() / 2, 1.0, 0.0, buffer);
+	AcGePoint3d position(center() + majorAxis());
+	double height = minorAxis().length() / 2.0;
+
+	TCHAR buffer[128]{'\0'};
+
+	position.x += position.x * 0.1;
+	position.y += minorAxis().y - height;
+
+	_stprintf(buffer, _T("id: %d"), m_nID);
+	mode->geometry().text(/* position  */ position,
+						  /* normal    */ normal(),
+						  /* direction */ majorAxis(),
+						  /* height    */ height, 
+						  /* width     */ 1.0,
+						  /* oblique   */ 0.0,
+						  /* string    */ buffer);
+
+	position.y -= height * 1.5;
+	_stprintf(buffer, _T("cube: %d"), m_nCube);
+	mode->geometry().text(/* position  */ position,
+						  /* normal    */ normal(),
+						  /* direction */ majorAxis(),
+						  /* height    */ height,
+						  /* width     */ 1.0,
+						  /* oblique   */ 0.0,
+						  /* string    */ buffer);
+
+	position.y -= height  * 1.5;
+	_stprintf(buffer, _T("first name: %s"), m_strFirstName);
+	mode->geometry().text(/* position  */ position,
+						  /* normal    */ normal(),
+						  /* direction */ majorAxis(),
+						  /* height    */ height,
+						  /* width     */ 1.0,
+						  /* oblique   */ 0.0,
+						  /* string    */ buffer);
+
+	position.y -= height * 1.5;
+	_stprintf(buffer, _T("last name: %s"), m_strLastName);
+	mode->geometry().text(/* position  */ position,
+						  /* normal    */ normal(),
+						  /* direction */ majorAxis(),
+						  /* height    */ height,
+						  /* width     */ 1.0,
+						  /* oblique   */ 0.0,
+						  /* string    */ buffer);
 
 	return Adesk::kTrue;
 }
 
-//Adesk::UInt32 Employee::subSetAttributes(AcGiDrawableTraits * traits) {
-//	assertReadEnabled();
-//	return (AcDbEllipse::subSetAttributes(traits));
-//}
+Adesk::UInt32 Employee::subSetAttributes(AcGiDrawableTraits * traits) {
+	assertReadEnabled();
+	return (AcDbEllipse::subSetAttributes(traits));
+}
 
 //---------------------------------------------------------
 Acad::ErrorStatus Employee::SetId(const Adesk::Int32 nID) {

@@ -24,6 +24,7 @@
 //-----------------------------------------------------------------------------
 #include "StdAfx.h"
 #include "resource.h"
+#include "Employee.h"
 
 //-----------------------------------------------------------------------------
 #define szRDS _RXST("")
@@ -42,6 +43,7 @@ public:
 		AcRx::AppRetCode retCode =AcRxDbxApp::On_kInitAppMsg (pkt) ;
 		
 		// TODO: Add your initialization code here
+		acrxRegisterService(EMPLOYEE_DBXSERVICE);
 
 		return (retCode) ;
 	}
@@ -53,6 +55,7 @@ public:
 		AcRx::AppRetCode retCode =AcRxDbxApp::On_kUnloadAppMsg (pkt) ;
 
 		// TODO: Unload dependencies here
+		delete acrxServiceDictionary->remove(EMPLOYEE_DBXSERVICE);
 
 		return (retCode) ;
 	}

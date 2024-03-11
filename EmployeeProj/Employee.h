@@ -44,10 +44,9 @@
 #define DLLIMPEXP
 #endif
 
-#define EMPLOYEE_DBXSERVICE _T("EMPLOYEE_DBXSERVICE")
-
 //-----------------------------------------------------------------------------
 #include "dbelipse.h"
+#define EMPLOYEE_DBXSERVICE _T("EMPLOYEE_DBXSERVICE")
 
 //-----------------------------------------------------------------------------
 class DLLIMPEXP Employee : public AcDbEllipse {
@@ -80,7 +79,7 @@ public:
 	//- Graphics protocol
 protected:
 	virtual Adesk::Boolean subWorldDraw (AcGiWorldDraw *mode) ;
-	//virtual Adesk::UInt32 subSetAttributes (AcGiDrawableTraits *traits) ;
+	virtual Adesk::UInt32 subSetAttributes (AcGiDrawableTraits *traits) ;
 
 public:
 	Acad::ErrorStatus SetId(const Adesk::Int32 nID);

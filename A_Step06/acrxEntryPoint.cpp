@@ -34,40 +34,97 @@
 class CA_Step06App : public AcRxArxApp {
 
 public:
-	CA_Step06App () : AcRxArxApp () {}
+	CA_Step06App() : AcRxArxApp() {}
 
-	virtual AcRx::AppRetCode On_kInitAppMsg (void *pkt) {
+	virtual AcRx::AppRetCode On_kInitAppMsg(void* pkt) {
 		// TODO: Load dependencies here
 
 		// You *must* call On_kInitAppMsg here
-		AcRx::AppRetCode retCode =AcRxArxApp::On_kInitAppMsg (pkt) ;
-		
-		// TODO: Add your initialization code here
-		acrxRegisterService(EMPLOYEE_DBXSERVICE);
+		AcRx::AppRetCode retCode = AcRxArxApp::On_kInitAppMsg(pkt);
 
-		return (retCode) ;
+		// TODO: Add your initialization code here
+		AcRxObject* pSvc;
+		if (!(pSvc = acrxServiceDictionary->at(EMPLOYEE_DBXSERVICE)))
+		{
+			// Try to load the module, if it is not yet present 
+			if (!acrxDynamicLinker->loadModule(_T("Employee.dbx"), 0))
+			{
+				acutPrintf(_T("Unable to load EmployeeDetails.dbx. Unloading this application...\n"));
+				return (AcRx::kRetError);
+			}
+		}
+
+		return (retCode);
 	}
 
-	virtual AcRx::AppRetCode On_kUnloadAppMsg (void *pkt) {
+	virtual AcRx::AppRetCode On_kUnloadAppMsg(void* pkt) {
 		// TODO: Add your code here
 
 		// You *must* call On_kUnloadAppMsg here
-		AcRx::AppRetCode retCode =AcRxArxApp::On_kUnloadAppMsg (pkt) ;
+		AcRx::AppRetCode retCode = AcRxArxApp::On_kUnloadAppMsg(pkt);
 
 		// TODO: Unload depend
-		delete acrxServiceDictionary->remove(EMPLOYEE_DBXSERVICE);
 
 
-		return (retCode) ;
+
+		return (retCode);
 	}
 
-	virtual void RegisterServerComponents () {
+	virtual void RegisterServerComponents() {
 	}
-		
-} ;
+
+	static void Step06_createEmployee() {
+
+		try
+		{
+			int id, cubeNumber;
+			TCHAR strFirstName[133];
+			TCHAR strLastName[133];
+			AcGePoint3d pt;
+			if (acedGetInt(_T("Enter employee ID: "), &id) != RTNORM
+				|| acedGetInt(_T("Enter cube number: "), &cubeNumber) != RTNORM
+				|| acedGetString(0, _T("Enter employee first name: "), strFirstName) != RTNORM
+				|| acedGetString(0, _T("Enter employee last name: "), strLastName) != RTNORM
+				|| acedGetPoint(NULL, _T("Employee position: "), asDblArray(pt)) != RTNORM
+				) {
+				return;
+			}
+
+			//AcGePoint3d pt(0.0, 0.0, 0.0);
+			AcDbBlockTable* pBlockTable;
+			if (acdbHostApplicationServices()->workingDatabase()->getBlockTable(pBlockTable, AcDb::kForWrite) == Acad::eOk) {
+				// Get the Model Space record and open it for write. This will be the owner of the new employee entity.
+				AcDbBlockTableRecord* pSpaceRecord;
+				if (pBlockTable->getAt(ACDB_MODEL_SPACE, pSpaceRecord, AcDb::kForWrite) == Acad::eOk) {
+					Employee* pEnt = new Employee();
+					pEnt->SetId(id);
+					pEnt->SetCube(cubeNumber);
+					pEnt->SetFirstName(strFirstName);
+					pEnt->SetLastName(strLastName);
+					pEnt->setCenter(pt);
+					// Append pEnt to Model Space, then close it and the Model Space record.
+					AcDbObjectId idObj;
+					if (pSpaceRecord->appendAcDbEntity(idObj, pEnt) == Acad::eOk)
+						pEnt->close();
+					else
+						delete pEnt;
+					pSpaceRecord->close();
+				}
+				pBlockTable->close();
+			}
+
+		}
+		catch (const std::exception&)
+		{
+
+		}
+
+	}
+
+};
 
 //-----------------------------------------------------------------------------
 IMPLEMENT_ARX_ENTRYPOINT(CA_Step06App)
 
-//ACED_ARXCOMMAND_ENTRY_AUTO(CA_Step06App, MyGroup, MyCommand, MyCommandLocal, ACRX_CMD_MODAL, NULL)
+ACED_ARXCOMMAND_ENTRY_AUTO(CA_Step06App, Step06, _createEmployee, createEmployee, ACRX_CMD_TRANSPARENT, NULL)
 
