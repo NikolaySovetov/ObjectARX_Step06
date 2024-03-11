@@ -40,6 +40,7 @@
 
     //- ObjectARX and OMF headers needs this
 #include <map>
+#include <tchar.h>
 
                 //-----------------------------------------------------------------------------
     //- Include ObjectDBX/ObjectARX headers
