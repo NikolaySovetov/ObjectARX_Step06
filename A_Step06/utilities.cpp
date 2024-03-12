@@ -27,4 +27,30 @@ bool SetEmployeeContext(Employee* pEmpl) {
 	return true;
 }
 
+bool SetEmployeeContext(std::unique_ptr<Employee> pEmpl) {
+	return SetEmployeeContext(pEmpl.get());
+}
+
+AcDbBlockTableWrapper::AcDbBlockTableWrapper(AcDb::OpenMode mode) {
+
+	if (acdbHostApplicationServices()->workingDatabase()->getBlockTable(pBlockTable, mode)
+		!= Acad::eOk) {
+
+		pBlockTable = nullptr;
+	}
+
+}
+
+AcDbBlockTableWrapper::~AcDbBlockTableWrapper() {
+	if (pBlockTable) {
+		pBlockTable->close();
+	}
+}
+
+AcDbBlockTable* AcDbBlockTableWrapper::Get() {
+	return pBlockTable;
+}
+
+
+
 

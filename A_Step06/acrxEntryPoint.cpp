@@ -78,18 +78,17 @@ public:
 		std::unique_ptr<Employee> pEmpl{ std::make_unique<Employee>() };
 		SetEmployeeContext(pEmpl.get());
 
-  		AcDbBlockTable* pBlockTable;
-		acdbHostApplicationServices()->workingDatabase()->getBlockTable(pBlockTable, AcDb::kForRead);
+		AcDbBlockTableWrapper blockTableWrap(AcDb::kForRead);
 
 		AcDbBlockTableRecord* pSpaceRecord;
-		pBlockTable->getAt(ACDB_MODEL_SPACE, pSpaceRecord, AcDb::kForWrite);
+		blockTableWrap.Get()->getAt(ACDB_MODEL_SPACE, pSpaceRecord, AcDb::kForWrite);
 		
 		AcDbObjectId idObj;
 		pSpaceRecord->appendAcDbEntity(idObj, pEmpl.get());
 		pEmpl->close();
 		pEmpl.release();
 		pSpaceRecord->close();
-		pBlockTable->close();
+
 
 
 
