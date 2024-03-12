@@ -168,50 +168,10 @@ Adesk::Boolean Employee::subWorldDraw(AcGiWorldDraw * mode) {
 	// Draw the Employee ID and Name
 	AcGePoint3d position(center() + majorAxis());
 	double height = minorAxis().length() / 2.0;
-
-	TCHAR buffer[128]{'\0'};
-
 	position.x += position.x * 0.1;
 	position.y += minorAxis().y - height;
 
-	_stprintf(buffer, _T("id: %d"), context.m_nID);
-	mode->geometry().text(/* position  */ position,
-						  /* normal    */ normal(),
-						  /* direction */ majorAxis(),
-						  /* height    */ height, 
-						  /* width     */ 1.0,
-						  /* oblique   */ 0.0,
-						  /* string    */ buffer);
-
-	position.y -= height * 1.5;
-	_stprintf(buffer, _T("cube: %d"), context.m_nCube);
-	mode->geometry().text(/* position  */ position,
-						  /* normal    */ normal(),
-						  /* direction */ majorAxis(),
-						  /* height    */ height,
-						  /* width     */ 1.0,
-						  /* oblique   */ 0.0,
-						  /* string    */ buffer);
-
-	position.y -= height  * 1.5;
-	_stprintf(buffer, _T("first name: %s"), context.m_strFirstName);
-	mode->geometry().text(/* position  */ position,
-						  /* normal    */ normal(),
-						  /* direction */ majorAxis(),
-						  /* height    */ height,
-						  /* width     */ 1.0,
-						  /* oblique   */ 0.0,
-						  /* string    */ buffer);
-
-	position.y -= height * 1.5;
-	_stprintf(buffer, _T("last name: %s"), context.m_strLastName);
-	mode->geometry().text(/* position  */ position,
-						  /* normal    */ normal(),
-						  /* direction */ majorAxis(),
-						  /* height    */ height,
-						  /* width     */ 1.0,
-						  /* oblique   */ 0.0,
-						  /* string    */ buffer);
+	context.WorldDraw(position, normal(), majorAxis(), height, 1.6, mode);
 
 	return Adesk::kTrue;
 }

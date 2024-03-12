@@ -108,6 +108,33 @@ private:
 			}
 		}
 
+		void WorldDraw(AcGePoint3d& textPosition,
+					   const AcGeVector3d& normal,
+					   const AcGeVector3d& direction,
+					   const double& height,
+					   const double& downOffsetByHeight,
+					   const AcGiWorldDraw* mode) {
+			
+			TCHAR buffer[128];
+			const double width{ 1.0 };
+			const double oblique{ 0.0 };
+
+			_stprintf(buffer, _T("id: %d"), m_nID);
+			mode->geometry().text(textPosition, normal, direction, height, width, oblique, buffer);
+
+			textPosition.y -= height * downOffsetByHeight;
+			_stprintf(buffer, _T("cube: %d"), m_nCube);
+			mode->geometry().text(textPosition, normal, direction, height, width, oblique, buffer);
+
+			textPosition.y -= height * downOffsetByHeight;
+			_stprintf(buffer, _T("first name: %s"), m_strFirstName);
+			mode->geometry().text(textPosition, normal, direction, height, width, oblique, buffer);
+
+			textPosition.y -= height * downOffsetByHeight;
+			_stprintf(buffer, _T("last name: %s"), m_strLastName);
+			mode->geometry().text(textPosition, normal, direction, height, width, oblique, buffer);
+		}
+
 	} context;
 
 public:
