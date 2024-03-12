@@ -25,6 +25,7 @@
 #include "StdAfx.h"
 #include "resource.h"
 #include "utilities.h"
+#include <stdexcept>
 
 //-----------------------------------------------------------------------------
 #define szRDS _RXST("")
@@ -75,15 +76,23 @@ public:
 
 	static void Step06_createEmployee() {
 
-		std::unique_ptr<Employee> pEmpl{ std::make_unique<Employee>() };
-		SetEmployeeContext(pEmpl.get());
+		try	{
+			std::unique_ptr<Employee> pEmpl{ std::make_unique<Employee>() };
+			if (!SetEmployeeContext(pEmpl)) {
+				acutPrintf(L"\nError: Can't set Employee::context");
+				return;
+			}
 
-	    BlockTableWrapper blockTableWrap(AcDb::kForRead);
+			BlockTableWrapper blockTableWrap(AcDb::kForRead);
 
-		BlockTableRecordWrapper blockTableRecordWrap
-		(blockTableWrap.Get(), ACDB_MODEL_SPACE, AcDb::kForWrite);
+			BlockTableRecordWrapper blockTableRecordWrap
+			(blockTableWrap.Get(), ACDB_MODEL_SPACE, AcDb::kForWrite);
 
-		blockTableRecordWrap.appendEntity<Employee>(pEmpl);
+			blockTableRecordWrap.appendEntity<Employee>(pEmpl);
+		}
+		catch (const std::exception& e) {
+			acutPrintf(_T("\nException: %s"), e.what());
+		}
 
 	}
 
