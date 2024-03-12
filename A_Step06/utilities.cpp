@@ -31,24 +31,49 @@ bool SetEmployeeContext(std::unique_ptr<Employee> pEmpl) {
 	return SetEmployeeContext(pEmpl.get());
 }
 
-AcDbBlockTableWrapper::AcDbBlockTableWrapper(AcDb::OpenMode mode) {
+//--------------------------------------------------------------
+BlockTableWrapper::BlockTableWrapper(AcDb::OpenMode mode) {
 
-	if (acdbHostApplicationServices()->workingDatabase()->getBlockTable(pBlockTable, mode)
+	if (acdbHostApplicationServices()->workingDatabase()->getBlockTable(m_pBlockTable, mode)
 		!= Acad::eOk) {
-
-		pBlockTable = nullptr;
+		// TODO: message
+		m_pBlockTable = nullptr;
 	}
 
 }
 
-AcDbBlockTableWrapper::~AcDbBlockTableWrapper() {
-	if (pBlockTable) {
-		pBlockTable->close();
+BlockTableWrapper::~BlockTableWrapper() {
+	if (m_pBlockTable) {
+		m_pBlockTable->close();
 	}
 }
 
-AcDbBlockTable* AcDbBlockTableWrapper::Get() {
-	return pBlockTable;
+const AcDbBlockTable* BlockTableWrapper::Get() const {
+	return m_pBlockTable;
+}
+
+//--------------------------------------------------------------
+BlockTableRecordWrapper::BlockTableRecordWrapper
+(const AcDbBlockTable* pBlockTable, const ACHAR* entryName, AcDb::OpenMode mode) {
+
+	if (!pBlockTable) {
+		return;
+	}
+
+	if (pBlockTable->getAt(entryName, m_pBlockTableRecord, mode) != Acad::eOk) {
+		// TODO: message
+		m_pBlockTableRecord = nullptr;
+	}
+}
+
+BlockTableRecordWrapper::~BlockTableRecordWrapper() {
+	if (m_pBlockTableRecord) {
+		m_pBlockTableRecord->close();
+	}
+}
+
+const AcDbBlockTableRecord* BlockTableRecordWrapper::Get() const  {
+	return m_pBlockTableRecord;
 }
 
 

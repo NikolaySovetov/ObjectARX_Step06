@@ -236,5 +236,3 @@ Acad::ErrorStatus Employee::GetLastName(TCHAR * &strLastName) {
 	strLastName = context.m_strLastName;
 	return Acad::eOk;
 }
-
-
