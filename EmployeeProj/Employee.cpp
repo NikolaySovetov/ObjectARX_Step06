@@ -24,6 +24,7 @@
 //-----------------------------------------------------------------------------
 #include "StdAfx.h"
 #include "Employee.h"
+#include <exception>
 
 //-----------------------------------------------------------------------------
 Adesk::UInt32 Employee::kCurrentVersionNumber = 1;
@@ -50,7 +51,6 @@ Employee::Employee() : AcDbEllipse(AcGePoint3d(), AcGeVector3d(0, 0, 1), AcGeVec
 }
 
 Employee::~Employee() {
-	//this->close();
 }
 
 //-----------------------------------------------------------------------------
@@ -184,55 +184,185 @@ Adesk::UInt32 Employee::subSetAttributes(AcGiDrawableTraits * traits) {
 
 //---------------------------------------------------------
 Acad::ErrorStatus Employee::SetId(const Adesk::Int32 nID) {
-	assertWriteEnabled();
-	context.m_nID = nID;
+	try {
+		assertWriteEnabled();
+		context.m_nID = nID;
+	}
+	catch (const std::exception& e)
+	{
+		acutPrintf(_T("\nException: %s"), e.what());
+	}
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::GetId(Adesk::Int32 & nID) {
-	assertReadEnabled();
-	nID = context.m_nID;
+	try {
+		assertReadEnabled();
+		nID = context.m_nID;
+	}
+	catch (const std::exception& e)
+	{
+		acutPrintf(_T("\nException: %s"), e.what());
+	}
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::SetCube(const Adesk::Int32 nCube) {
-	assertWriteEnabled();
-	context.m_nCube = nCube;
+	try {
+		assertWriteEnabled();
+		context.m_nCube = nCube;
+	}
+	catch (const std::exception& e)
+	{
+		acutPrintf(_T("\nException: %s"), e.what());
+	}
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::GetCube(Adesk::Int32 & nCube) {
-	assertReadEnabled();
-	nCube = context.m_nCube;
+	try {
+		assertReadEnabled();
+		nCube = context.m_nCube;
+	}
+	catch (const std::exception& e)
+	{
+		acutPrintf(_T("\nException: %s"), e.what());
+	}
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::SetFirstName(const TCHAR * strFirstName) {
-	assertWriteEnabled();
-	if (context.m_strFirstName) {
-		free(context.m_strFirstName);
+	try {
+		assertWriteEnabled();
+		if (context.m_strFirstName) {
+			free(context.m_strFirstName);
+		}
+		context.m_strFirstName = _tcsdup(strFirstName);
 	}
-	context.m_strFirstName = _tcsdup(strFirstName);
+	catch (const std::exception& e)
+	{
+		acutPrintf(_T("\nExeption: %s"), e.what());
+	}
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::GetFirstName(TCHAR * &strFirstName) {
-	assertReadEnabled();
-	strFirstName = context.m_strFirstName;
+	try {
+		assertReadEnabled();
+		strFirstName = context.m_strFirstName;
+	}
+	catch (const std::exception& e)
+	{
+		acutPrintf(_T("\nExeption: %s"), e.what());
+	}
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::SetLastName(const TCHAR * strLastName) {
-	assertWriteEnabled();
-	if (context.m_strLastName) {
-		free(context.m_strLastName);
+	try {
+		assertWriteEnabled();
+		if (context.m_strLastName) {
+			free(context.m_strLastName);
+		}
+		context.m_strLastName = _tcsdup(strLastName);
 	}
-	context.m_strLastName = _tcsdup(strLastName);
+	catch (const std::exception& e) {
+		acutPrintf(_T("\nExeption: %s"), e.what());
+	}
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::GetLastName(TCHAR * &strLastName) {
-	assertReadEnabled();
-	strLastName = context.m_strLastName;
+	try {
+		assertReadEnabled();
+		strLastName = context.m_strLastName;
+	}
+	catch (const std::exception& e)
+	{
+		acutPrintf(_T("\nExeption: %s"), e.what());
+	}
 	return Acad::eOk;
 }
+
+//---------------------------------------------------------
+void Employee::Context::DwgWrite(AcDbDwgFiler * pFiler) const {
+
+	pFiler->writeItem(m_strLastName);
+	pFiler->writeItem(m_strFirstName);
+	pFiler->writeItem(m_nCube);
+	pFiler->writeItem(m_nID);
+}
+
+void Employee::Context::DwgRead(AcDbDwgFiler * pFiler) {
+
+	pFiler->readItem(&m_strLastName);
+	pFiler->readItem(&m_strFirstName);
+	pFiler->readItem(&m_nCube);
+	pFiler->readItem(&m_nID);
+}
+
+void Employee::Context::DxfWrite(AcDbDxfFiler * pFiler) const {
+
+	pFiler->writeItem(AcDb::kDxfXTextString, m_strLastName);
+	pFiler->writeItem(AcDb::kDxfXTextString + 1, m_strFirstName);
+	pFiler->writeItem(AcDb::kDxfInt32, m_nCube);
+	pFiler->writeItem(AcDb::kDxfInt32 + 1, m_nID);
+}
+
+void Employee::Context::DxfRead(struct resbuf& rb, Acad::ErrorStatus & es, AcDbDxfFiler * pFiler) {
+	while (es == Acad::eOk && (es = pFiler->readResBuf(&rb)) == Acad::eOk) {
+		switch (rb.restype) {
+		case AcDb::kDxfXTextString:
+			if (m_strLastName) {
+				free(m_strLastName);
+			}
+			m_strLastName = _tcsdup(rb.resval.rstring);
+			break;
+		case AcDb::kDxfXTextString + 1:
+			if (m_strLastName) {
+				free(m_strLastName);
+			}
+			m_strLastName = _tcsdup(rb.resval.rstring);
+			break;
+		case AcDb::kDxfInt32:
+			m_nCube = rb.resval.rlong;
+			break;
+		case AcDb::kDxfInt32 + 1:
+			m_nID = rb.resval.rlong;
+			break;
+		default:
+			//----- An unrecognized group. Push it back so that the subclass can read it again.
+			pFiler->pushBackItem();
+			es = Acad::eEndOfFile;
+			break;
+		}
+	}
+}
+
+void Employee::Context::WorldDraw(AcGePoint3d & textPosition,
+	const AcGeVector3d & normal,
+	const AcGeVector3d & direction,
+	const double& height,
+	const double& downOffsetByHeight,
+	const AcGiWorldDraw * mode) {
+
+	TCHAR buffer[128];
+	const double width{ 1.0 };
+	const double oblique{ 0.0 };
+
+	_stprintf(buffer, _T("id: %d"), m_nID);
+	mode->geometry().text(textPosition, normal, direction, height, width, oblique, buffer);
+
+	textPosition.y -= height * downOffsetByHeight;
+	_stprintf(buffer, _T("cube: %d"), m_nCube);
+	mode->geometry().text(textPosition, normal, direction, height, width, oblique, buffer);
+
+	textPosition.y -= height * downOffsetByHeight;
+	_stprintf(buffer, _T("first name: %s"), m_strFirstName);
+	mode->geometry().text(textPosition, normal, direction, height, width, oblique, buffer);
+
+	textPosition.y -= height * downOffsetByHeight;
+	_stprintf(buffer, _T("last name: %s"), m_strLastName);
+	mode->geometry().text(textPosition, normal, direction, height, width, oblique, buffer);
+}
+

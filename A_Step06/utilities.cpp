@@ -36,7 +36,7 @@ BlockTableWrapper::BlockTableWrapper(AcDb::OpenMode mode) {
 
 	if (acdbHostApplicationServices()->workingDatabase()->getBlockTable(m_pBlockTable, mode)
 		!= Acad::eOk) {
-		// TODO: message
+		acutPrintf(L"\nError: Can't open the BlockTable");
 		m_pBlockTable = nullptr;
 	}
 
@@ -61,7 +61,7 @@ BlockTableRecordWrapper::BlockTableRecordWrapper
 	}
 
 	if (pBlockTable->getAt(entryName, m_pBlockTableRecord, mode) != Acad::eOk) {
-		// TODO: message
+		acutPrintf(L"\nError: Can't open the BlockTableRecord");
 		m_pBlockTableRecord = nullptr;
 	}
 }

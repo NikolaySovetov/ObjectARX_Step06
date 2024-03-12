@@ -36,7 +36,7 @@ public:
 
 		AcDbObjectId id;
 		if (m_pBlockTableRecord->appendAcDbEntity(id, pEntity.get()) != Acad::eOk) {
-			//TODO: message
+			acutPrintf(L"\nError: Can't add Entity to the BlockTableRecord");
 			return;
 		}
 		pEntity->close();

@@ -51,7 +51,7 @@
 //-----------------------------------------------------------------------------
 class DLLIMPEXP Employee : public AcDbEllipse {
 private:
-	struct {
+	struct Context {
 	public:
 		Adesk::Int32 m_nID;
 		Adesk::Int32 m_nCube;
@@ -59,84 +59,18 @@ private:
 		TCHAR* m_strLastName;
 
 	public:
-		void DwgWrite(AcDbDwgFiler* pFiler) const {
-			pFiler->writeItem(m_strLastName);
-			pFiler->writeItem(m_strFirstName);
-			pFiler->writeItem(m_nCube);
-			pFiler->writeItem(m_nID);
-		}
-		void DwgRead(AcDbDwgFiler* pFiler) {
-			pFiler->readItem(&m_strLastName);
-			pFiler->readItem(&m_strFirstName);
-			pFiler->readItem(&m_nCube);
-			pFiler->readItem(&m_nID);
-		}
+		void DwgWrite(AcDbDwgFiler* pFiler) const;
+		void DwgRead(AcDbDwgFiler* pFiler);
 
-		void DxfWrite(AcDbDxfFiler* pFiler) const {
-			pFiler->writeItem(AcDb::kDxfXTextString, m_strLastName);
-			pFiler->writeItem(AcDb::kDxfXTextString + 1, m_strFirstName);
-			pFiler->writeItem(AcDb::kDxfInt32, m_nCube);
-			pFiler->writeItem(AcDb::kDxfInt32 + 1, m_nID);
-		}
-		void DxfRead(struct resbuf& rb, Acad::ErrorStatus& es, AcDbDxfFiler* pFiler) {
-			while (es == Acad::eOk && (es = pFiler->readResBuf(&rb)) == Acad::eOk) {
-				switch (rb.restype) {
-				case AcDb::kDxfXTextString:
-					if (m_strLastName) {
-						free(m_strLastName);
-					}
-					m_strLastName = _tcsdup(rb.resval.rstring);
-					break;
-				case AcDb::kDxfXTextString + 1:
-					if (m_strLastName) {
-						free(m_strLastName);
-					}
-					m_strLastName = _tcsdup(rb.resval.rstring);
-					break;
-				case AcDb::kDxfInt32:
-					m_nCube = rb.resval.rlong;
-					break;
-				case AcDb::kDxfInt32 + 1:
-					m_nID = rb.resval.rlong;
-					break;
-				default:
-					//----- An unrecognized group. Push it back so that the subclass can read it again.
-					pFiler->pushBackItem();
-					es = Acad::eEndOfFile;
-					break;
-				}
-			}
-		}
+		void DxfWrite(AcDbDxfFiler* pFiler) const;
+		void DxfRead(struct resbuf& rb, Acad::ErrorStatus& es, AcDbDxfFiler* pFiler);
 
 		void WorldDraw(AcGePoint3d& textPosition,
-					   const AcGeVector3d& normal,
-					   const AcGeVector3d& direction,
-					   const double& height,
-					   const double& downOffsetByHeight,
-					   const AcGiWorldDraw* mode) {
-			
-			TCHAR buffer[128];
-			const double width{ 1.0 };
-			const double oblique{ 0.0 };
-
-			_stprintf(buffer, _T("id: %d"), m_nID);
-			mode->geometry().text(textPosition, normal, direction, height, width, oblique, buffer);
-
-			textPosition.y -= height * downOffsetByHeight;
-			_stprintf(buffer, _T("cube: %d"), m_nCube);
-			mode->geometry().text(textPosition, normal, direction, height, width, oblique, buffer);
-
-			textPosition.y -= height * downOffsetByHeight;
-			_stprintf(buffer, _T("first name: %s"), m_strFirstName);
-			mode->geometry().text(textPosition, normal, direction, height, width, oblique, buffer);
-
-			textPosition.y -= height * downOffsetByHeight;
-			_stprintf(buffer, _T("last name: %s"), m_strLastName);
-			mode->geometry().text(textPosition, normal, direction, height, width, oblique, buffer);
-		}
-
-
-
+			const AcGeVector3d& normal,
+			const AcGeVector3d& direction,
+			const double& height,
+			const double& downOffsetByHeight,
+			const AcGiWorldDraw* mode);
 
 	} context;
 
