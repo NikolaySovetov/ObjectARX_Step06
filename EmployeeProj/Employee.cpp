@@ -43,10 +43,10 @@ ACRX_DXF_DEFINE_MEMBERS(
 
 //Employee::Employee() : AcDbEllipse() {       // HACK: Exception when try to write text!!! 
 Employee::Employee() : AcDbEllipse(AcGePoint3d(), AcGeVector3d(0, 0, 1), AcGeVector3d(1, 0, 0), 0.3) {
-	m_nID = 0;
-	m_nCube = 0;
-	m_strFirstName = nullptr;
-	m_strLastName = nullptr;
+	context.m_nID = 0;
+	context.m_nCube = 0;
+	context.m_strFirstName = nullptr;
+	context.m_strLastName = nullptr;
 }
 
 Employee::~Employee() {
@@ -68,10 +68,7 @@ Acad::ErrorStatus Employee::dwgOutFields(AcDbDwgFiler * pFiler) const {
 	//.....
 
 	// Write the data members
-	pFiler->writeItem(m_strLastName);
-	pFiler->writeItem(m_strFirstName);
-	pFiler->writeItem(m_nCube);
-	pFiler->writeItem(m_nID);
+	context.DwgWrite(pFiler);
 
 	return (pFiler->filerStatus());
 }
@@ -97,10 +94,7 @@ Acad::ErrorStatus Employee::dwgInFields(AcDbDwgFiler * pFiler) {
 
 	switch (version) {
 	case (1):
-		pFiler->readItem(&m_strLastName);
-		pFiler->readItem(&m_strFirstName);
-		pFiler->readItem(&m_nCube);
-		pFiler->readItem(&m_nID);
+		context.DwgRead(pFiler);
 		break;
 	}
 
@@ -124,10 +118,7 @@ Acad::ErrorStatus Employee::dxfOutFields(AcDbDxfFiler * pFiler) const {
 	//.....
 
 	// Write out the data members
-	pFiler->writeItem(AcDb::kDxfXTextString, m_strLastName);
-	pFiler->writeItem(AcDb::kDxfXTextString + 1, m_strFirstName);
-	pFiler->writeItem(AcDb::kDxfInt32, m_nID);
-	pFiler->writeItem(AcDb::kDxfInt32 + 1, m_nCube);
+	context.DxfWrite(pFiler);
 
 	return (pFiler->filerStatus());
 }
@@ -154,41 +145,8 @@ Acad::ErrorStatus Employee::dxfInFields(AcDbDxfFiler * pFiler) {
 	//if ( version < Employee::kCurrentVersionNumber )
 	//	return (Acad::eMakeMeProxy) ;
 	//----- Read params in non order dependant manner
-	while (es == Acad::eOk && (es = pFiler->readResBuf(&rb)) == Acad::eOk) {
-		switch (rb.restype) {
-			//----- Read params by looking at their DXF code (example below)
-			//case AcDb::kDxfXCoord:
-			//	if ( version == 1 )
-			//		cen3d =asPnt3d (rb.resval.rpoint) ;
-			//	else 
-			//		cen2d =asPnt2d (rb.resval.rpoint) ;
-			//	break ;
-			//.....
-		case AcDb::kDxfXTextString:
-			if (m_strLastName) {
-				free(m_strLastName);
-			}
-			m_strLastName = _tcsdup(rb.resval.rstring);
-			break;
-		case AcDb::kDxfXTextString + 1:
-			if (m_strLastName) {
-				free(m_strLastName);
-			}
-			m_strLastName = _tcsdup(rb.resval.rstring);
-			break;
-		case AcDb::kDxfInt32:
-			m_nCube = rb.resval.rlong;
-			break;
-		case AcDb::kDxfInt32 + 1:
-			m_nID = rb.resval.rlong;
-			break;
-		default:
-			//----- An unrecognized group. Push it back so that the subclass can read it again.
-			pFiler->pushBackItem();
-			es = Acad::eEndOfFile;
-			break;
-		}
-	}
+	context.DxfRead(rb, es, pFiler);
+
 	//----- At this point the es variable must contain eEndOfFile
 	//----- - either from readResBuf() or from pushback. If not,
 	//----- it indicates that an error happened and we should
@@ -216,7 +174,7 @@ Adesk::Boolean Employee::subWorldDraw(AcGiWorldDraw * mode) {
 	position.x += position.x * 0.1;
 	position.y += minorAxis().y - height;
 
-	_stprintf(buffer, _T("id: %d"), m_nID);
+	_stprintf(buffer, _T("id: %d"), context.m_nID);
 	mode->geometry().text(/* position  */ position,
 						  /* normal    */ normal(),
 						  /* direction */ majorAxis(),
@@ -226,7 +184,7 @@ Adesk::Boolean Employee::subWorldDraw(AcGiWorldDraw * mode) {
 						  /* string    */ buffer);
 
 	position.y -= height * 1.5;
-	_stprintf(buffer, _T("cube: %d"), m_nCube);
+	_stprintf(buffer, _T("cube: %d"), context.m_nCube);
 	mode->geometry().text(/* position  */ position,
 						  /* normal    */ normal(),
 						  /* direction */ majorAxis(),
@@ -236,7 +194,7 @@ Adesk::Boolean Employee::subWorldDraw(AcGiWorldDraw * mode) {
 						  /* string    */ buffer);
 
 	position.y -= height  * 1.5;
-	_stprintf(buffer, _T("first name: %s"), m_strFirstName);
+	_stprintf(buffer, _T("first name: %s"), context.m_strFirstName);
 	mode->geometry().text(/* position  */ position,
 						  /* normal    */ normal(),
 						  /* direction */ majorAxis(),
@@ -246,7 +204,7 @@ Adesk::Boolean Employee::subWorldDraw(AcGiWorldDraw * mode) {
 						  /* string    */ buffer);
 
 	position.y -= height * 1.5;
-	_stprintf(buffer, _T("last name: %s"), m_strLastName);
+	_stprintf(buffer, _T("last name: %s"), context.m_strLastName);
 	mode->geometry().text(/* position  */ position,
 						  /* normal    */ normal(),
 						  /* direction */ majorAxis(),
@@ -266,54 +224,54 @@ Adesk::UInt32 Employee::subSetAttributes(AcGiDrawableTraits * traits) {
 //---------------------------------------------------------
 Acad::ErrorStatus Employee::SetId(const Adesk::Int32 nID) {
 	assertWriteEnabled();
-	m_nID = nID;
+	context.m_nID = nID;
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::GetId(Adesk::Int32 & nID) {
 	assertReadEnabled();
-	nID = m_nID;
+	nID = context.m_nID;
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::SetCube(const Adesk::Int32 nCube) {
 	assertWriteEnabled();
-	m_nCube = nCube;
+	context.m_nCube = nCube;
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::GetCube(Adesk::Int32 & nCube) {
 	assertReadEnabled();
-	nCube = m_nCube;
+	nCube = context.m_nCube;
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::SetFirstName(const TCHAR * strFirstName) {
 	assertWriteEnabled();
-	if (m_strFirstName) {
-		free(m_strFirstName);
+	if (context.m_strFirstName) {
+		free(context.m_strFirstName);
 	}
-	m_strFirstName = _tcsdup(strFirstName);
+	context.m_strFirstName = _tcsdup(strFirstName);
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::GetFirstName(TCHAR * &strFirstName) {
 	assertReadEnabled();
-	strFirstName = m_strFirstName;
+	strFirstName = context.m_strFirstName;
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::SetLastName(const TCHAR * strLastName) {
 	assertWriteEnabled();
-	if (m_strLastName) {
-		free(m_strLastName);
+	if (context.m_strLastName) {
+		free(context.m_strLastName);
 	}
-	m_strLastName = _tcsdup(strLastName);
+	context.m_strLastName = _tcsdup(strLastName);
 	return Acad::eOk;
 }
 
 Acad::ErrorStatus Employee::GetLastName(TCHAR * &strLastName) {
 	assertReadEnabled();
-	strLastName = m_strLastName;
+	strLastName = context.m_strLastName;
 	return Acad::eOk;
 }

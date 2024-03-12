@@ -51,35 +51,89 @@
 //-----------------------------------------------------------------------------
 class DLLIMPEXP Employee : public AcDbEllipse {
 private:
-	Adesk::Int32 m_nID;
-	Adesk::Int32 m_nCube;
-	TCHAR* m_strFirstName;
-	TCHAR* m_strLastName;
+	struct {
+	public:
+		Adesk::Int32 m_nID;
+		Adesk::Int32 m_nCube;
+		TCHAR* m_strFirstName;
+		TCHAR* m_strLastName;
+
+	public:
+		void DwgWrite(AcDbDwgFiler* pFiler) const {
+			pFiler->writeItem(m_strLastName);
+			pFiler->writeItem(m_strFirstName);
+			pFiler->writeItem(m_nCube);
+			pFiler->writeItem(m_nID);
+		}
+		void DwgRead(AcDbDwgFiler* pFiler) {
+			pFiler->readItem(&m_strLastName);
+			pFiler->readItem(&m_strFirstName);
+			pFiler->readItem(&m_nCube);
+			pFiler->readItem(&m_nID);
+		}
+
+		void DxfWrite(AcDbDxfFiler* pFiler) const {
+			pFiler->writeItem(AcDb::kDxfXTextString, m_strLastName);
+			pFiler->writeItem(AcDb::kDxfXTextString + 1, m_strFirstName);
+			pFiler->writeItem(AcDb::kDxfInt32, m_nCube);
+			pFiler->writeItem(AcDb::kDxfInt32 + 1, m_nID);
+		}
+		void DxfRead(struct resbuf& rb, Acad::ErrorStatus& es, AcDbDxfFiler* pFiler) {
+			while (es == Acad::eOk && (es = pFiler->readResBuf(&rb)) == Acad::eOk) {
+				switch (rb.restype) {
+				case AcDb::kDxfXTextString:
+					if (m_strLastName) {
+						free(m_strLastName);
+					}
+					m_strLastName = _tcsdup(rb.resval.rstring);
+					break;
+				case AcDb::kDxfXTextString + 1:
+					if (m_strLastName) {
+						free(m_strLastName);
+					}
+					m_strLastName = _tcsdup(rb.resval.rstring);
+					break;
+				case AcDb::kDxfInt32:
+					m_nCube = rb.resval.rlong;
+					break;
+				case AcDb::kDxfInt32 + 1:
+					m_nID = rb.resval.rlong;
+					break;
+				default:
+					//----- An unrecognized group. Push it back so that the subclass can read it again.
+					pFiler->pushBackItem();
+					es = Acad::eEndOfFile;
+					break;
+				}
+			}
+		}
+
+	} context;
 
 public:
-	ACRX_DECLARE_MEMBERS(Employee) ;
+	ACRX_DECLARE_MEMBERS(Employee);
 
 protected:
-	static Adesk::UInt32 kCurrentVersionNumber ;
+	static Adesk::UInt32 kCurrentVersionNumber;
 
 public:
-	Employee () ;
-	virtual ~Employee () ;
+	Employee();
+	virtual ~Employee();
 
 	//----- AcDbObject protocols
 	//- Dwg Filing protocol
-	virtual Acad::ErrorStatus dwgOutFields (AcDbDwgFiler *pFiler) const ;
-	virtual Acad::ErrorStatus dwgInFields (AcDbDwgFiler *pFiler) ;
+	virtual Acad::ErrorStatus dwgOutFields(AcDbDwgFiler* pFiler) const;
+	virtual Acad::ErrorStatus dwgInFields(AcDbDwgFiler* pFiler);
 
 	//- Dxf Filing protocol
-	virtual Acad::ErrorStatus dxfOutFields (AcDbDxfFiler *pFiler) const ;
-	virtual Acad::ErrorStatus dxfInFields (AcDbDxfFiler *pFiler) ;
+	virtual Acad::ErrorStatus dxfOutFields(AcDbDxfFiler* pFiler) const;
+	virtual Acad::ErrorStatus dxfInFields(AcDbDxfFiler* pFiler);
 
 	//----- AcDbEntity protocols
 	//- Graphics protocol
 protected:
-	virtual Adesk::Boolean subWorldDraw (AcGiWorldDraw *mode) ;
-	virtual Adesk::UInt32 subSetAttributes (AcGiDrawableTraits *traits) ;
+	virtual Adesk::Boolean subWorldDraw(AcGiWorldDraw* mode);
+	virtual Adesk::UInt32 subSetAttributes(AcGiDrawableTraits* traits);
 
 public:
 	Acad::ErrorStatus SetId(const Adesk::Int32 nID);
@@ -90,7 +144,7 @@ public:
 	Acad::ErrorStatus GetFirstName(TCHAR*& strFirstName);
 	Acad::ErrorStatus SetLastName(const TCHAR* strLastName);
 	Acad::ErrorStatus GetLastName(TCHAR*& strLastName);
-} ;
+};
 
 #ifdef EMPLOYEEPROJ_MODULE
 ACDB_REGISTER_OBJECT_ENTRY_AUTO(Employee)
