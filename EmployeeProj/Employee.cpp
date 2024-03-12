@@ -50,6 +50,7 @@ Employee::Employee() : AcDbEllipse(AcGePoint3d(), AcGeVector3d(0, 0, 1), AcGeVec
 }
 
 Employee::~Employee() {
+	//this->close();
 }
 
 //-----------------------------------------------------------------------------
@@ -235,3 +236,5 @@ Acad::ErrorStatus Employee::GetLastName(TCHAR * &strLastName) {
 	strLastName = context.m_strLastName;
 	return Acad::eOk;
 }
+
+

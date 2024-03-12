@@ -135,6 +135,9 @@ private:
 			mode->geometry().text(textPosition, normal, direction, height, width, oblique, buffer);
 		}
 
+
+
+
 	} context;
 
 public:
@@ -171,7 +174,11 @@ public:
 	Acad::ErrorStatus GetFirstName(TCHAR*& strFirstName);
 	Acad::ErrorStatus SetLastName(const TCHAR* strLastName);
 	Acad::ErrorStatus GetLastName(TCHAR*& strLastName);
+
 };
+	
+
+	
 
 #ifdef EMPLOYEEPROJ_MODULE
 ACDB_REGISTER_OBJECT_ENTRY_AUTO(Employee)

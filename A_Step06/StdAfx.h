@@ -61,7 +61,5 @@
 	//- Declare it as an extern here so that it becomes available in all modules
 extern AcApDataManager<CDocData> DocVars;
 
-#include "Employee.h"
-
 #pragma pack(pop)
 
