@@ -5,7 +5,7 @@
 
 bool SetEmployeeContext(Employee* pEmpl);
 
-bool SetEmployeeContext(std::unique_ptr<Employee> pEmpl);
+bool SetEmployeeContext(const std::unique_ptr<Employee>& pEmpl);
 
 class BlockTableWrapper {
 private:

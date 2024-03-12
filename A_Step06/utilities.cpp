@@ -27,7 +27,7 @@ bool SetEmployeeContext(Employee* pEmpl) {
 	return true;
 }
 
-bool SetEmployeeContext(std::unique_ptr<Employee> pEmpl) {
+bool SetEmployeeContext(const std::unique_ptr<Employee>& pEmpl) {
 	return SetEmployeeContext(pEmpl.get());
 }
 
@@ -45,6 +45,7 @@ BlockTableWrapper::BlockTableWrapper(AcDb::OpenMode mode) {
 BlockTableWrapper::~BlockTableWrapper() {
 	if (m_pBlockTable) {
 		m_pBlockTable->close();
+		acutPrintf(L"\nEvent: BlockTableWrapper closed");
 	}
 }
 
@@ -69,6 +70,7 @@ BlockTableRecordWrapper::BlockTableRecordWrapper
 BlockTableRecordWrapper::~BlockTableRecordWrapper() {
 	if (m_pBlockTableRecord) {
 		m_pBlockTableRecord->close();
+		acutPrintf(L"\nEvent: BlockTableRecordWrapper closed");
 	}
 }
 
